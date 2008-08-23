@@ -1,0 +1,18 @@
+Name: escpbuf
+Version: 1.0.0
+License: GPL
+Maintainer: John Goerzen <jgoerzen@complete.org>
+Author: John Goerzen
+Stability: Stable
+Copyright: Copyright (c) 2008 John Goerzen
+license-file: COPYRIGHT
+extra-source-files: COPYING
+Build-type: Simple
+Category: Network
+Synopsis: Buffering for Epson-compatible dot-matrix printer
+Build-Depends: base, bytestring
+
+Executable: escpbuf
+Main-Is: escpbuf.hs
+GHC-Options: -O2
+
