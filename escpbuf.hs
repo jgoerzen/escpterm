@@ -21,7 +21,7 @@ module Main where
 import qualified Data.ByteString.Char8 as BS
 import System.IO
 
-delay = 500
+delay = 250
 flushBuf = "\ESCJ\0"
 reset = "\ESC@"
 unidir = "\ESCU\x01"
@@ -51,6 +51,6 @@ delayLoop =
                   BS.hPut stdout content
                   hFlush stdout
                   delayLoop
-          else do BS.hPut stdout (BS.pack postBuf)
+          else do BS.hPut stdout (BS.pack flushBuf)
                   hFlush stdout
-                  masterReadLoop preBuf
+                  masterReadLoop ""
