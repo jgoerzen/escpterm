@@ -48,9 +48,11 @@ delayLoop =
     do hasInput <- hWaitForInput stdin delay
        if hasInput
           then do content <- BS.hGetNonBlocking stdin 4096
-                  BS.hPut stdout content
-                  hFlush stdout
-                  delayLoop
+                  if BS.null content
+                     then return ()
+                     else do BS.hPut stdout content
+                             hFlush stdout
+                             delayLoop
           else do BS.hPut stdout (BS.pack flushBuf)
                   hFlush stdout
                   masterReadLoop ""
