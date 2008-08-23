@@ -1,0 +1,5 @@
+escpterm|80-column Epson ESC/P dot-matrix teletype,
+   OTbs, am, hc, os,
+   cols#80,
+   bel=^G, cr=^M, cud1=^J, ind=^J, cub1=^H,
+   sdrfq=\Ex0, snlq=\Ex1, snrmq=\Ex0, rs1=\E@,
