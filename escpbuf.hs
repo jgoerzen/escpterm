@@ -22,7 +22,7 @@ import qualified Data.ByteString.Char8 as BS
 import System.IO
 import Data.Word
 
-printDelay = 250
+printDelay = 200
 moveDelay = 1250
 
 flushBuf = "\ESCJ\0"
@@ -31,14 +31,13 @@ unidir = "\ESCU\x01"            -- unidirectional printing
 
 initCode = reset ++ unidir ++ marginCode 80
 
-{- Used to do this to roll paper.  Now we'll try to move horizontally.
-postBuf = "\ESCJ\x46" -- forward roll x/216 in (108/216 in)
-preBuf = "\ESCj\x46"  -- reverse roll
+prePause = "\ESCJ\x46" -- forward roll x/216 in (108/216 in)
+postPause = "\ESCj\x46"  -- reverse roll
 
--}
-
+{- Used to try this to move horizontally -- didn't work
 prePause = marginCode 90 ++ replicate 10 ' ' ++ flushBuf
 postPause = replicate 10 '\b' ++ flushBuf ++ marginCode 80
+-}
 
 main = 
     do hSetBuffering stdin NoBuffering
@@ -46,9 +45,6 @@ main =
        BS.hPut stdout (BS.pack initCode)
        masterReadLoop ""
 
--- Code to set the right margin to n chargs
--- from the left; n ranges from 1 to 255
-marginCode :: Word8 -> String
 marginCode chars =
     "\ESCQ" ++ [toEnum . fromIntegral $ chars]
 
