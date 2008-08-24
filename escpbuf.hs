@@ -22,6 +22,7 @@ import qualified Data.ByteString.Char8 as BS
 import System.IO
 import Data.Word
 
+delay = 250
 flushBuf = "\ESCJ\0"
 reset = "\ESC@"
 unidir = "\ESCU\x01"
@@ -55,13 +56,10 @@ masterReadLoop writeBefore =
        BS.hPut stdout (BS.pack writeBefore)
        BS.hPut stdout content
        hFlush stdout
-       delayLoop 250 prePause (masterReadLoop postPause)
+       delayLoop
 
-delayLoop :: Int                -- ^ The delay after which pause code kicks in
-          -> String             -- ^ Code to send when pause starts
-          -> IO ()              -- ^ Function to call after pause has started
-          -> IO ()              -- ^ Return value
-delayLoop delay prePauseCode pauseFunc =
+delayLoop :: IO ()
+delayLoop =
     do hasInput <- hWaitForInput stdin delay
        if hasInput
           then do content <- BS.hGetNonBlocking stdin 4096
@@ -69,7 +67,7 @@ delayLoop delay prePauseCode pauseFunc =
                      then return ()
                      else do BS.hPut stdout content
                              hFlush stdout
-                             delayLoop delay prePauseCode pauseFunc
+                             delayLoop
           else do BS.hPut stdout (BS.pack prePause)
                   hFlush stdout
-                  pauseFunc
+                  masterReadLoop postPause
