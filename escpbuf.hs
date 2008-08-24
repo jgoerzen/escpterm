@@ -22,7 +22,9 @@ import qualified Data.ByteString.Char8 as BS
 import System.IO
 import Data.Word
 
-delay = 250
+printDelay = 250
+moveDelay = 1250
+
 flushBuf = "\ESCJ\0"
 reset = "\ESC@"
 unidir = "\ESCU\x01"
@@ -60,7 +62,7 @@ masterReadLoop writeBefore =
 
 delayLoop :: IO ()
 delayLoop =
-    do hasInput <- hWaitForInput stdin delay
+    do hasInput <- hWaitForInput stdin printDelay
        if hasInput
           then do content <- BS.hGetNonBlocking stdin 4096
                   if BS.null content
@@ -68,6 +70,11 @@ delayLoop =
                      else do BS.hPut stdout content
                              hFlush stdout
                              delayLoop
-          else do BS.hPut stdout (BS.pack prePause)
+          else do BS.hPut stdout (BS.pack flushBuf)
                   hFlush stdout
-                  masterReadLoop postPause
+                  hasInput <- hWaitForInput stdin moveDelay
+                  if hasInput
+                     then delayLoop
+                     else do BS.hPut stdout (BS.pack prePause)
+                             hFlush stdout
+                             masterReadLoop postPause
