@@ -62,16 +62,22 @@ masterReadLoop writeBefore =
 
 delayLoop :: IO ()
 delayLoop =
-    do hasInput <- hWaitForInput stdin printDelay
+    do -- wait for a short time for input to become available.
+       hasInput <- hWaitForInput stdin printDelay
        if hasInput
-          then do content <- BS.hGetNonBlocking stdin 4096
+          then -- If available, then we read it, send it off, and start again
+               do content <- BS.hGetNonBlocking stdin 4096
                   if BS.null content
                      then return ()
                      else do BS.hPut stdout content
                              hFlush stdout
                              delayLoop
-          else do BS.hPut stdout (BS.pack flushBuf)
+          else -- Otherwise, start a pause.  Flush buffer.
+               do BS.hPut stdout (BS.pack flushBuf)
                   hFlush stdout
+                  -- Wait a longer time, and move printhead out of way if
+                  -- there's a longer pause.  If we get input in this time,
+                  -- recurse to process it.
                   hasInput <- hWaitForInput stdin moveDelay
                   if hasInput
                      then delayLoop
