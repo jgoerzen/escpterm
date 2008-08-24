@@ -35,7 +35,7 @@ preBuf = "\ESCj\x46"  -- reverse roll
 
 -}
 
-prePause = marginCode 90 ++ replicate 10 ' '
+prePause = marginCode 90 ++ replicate 10 ' ' ++ flushBuf
 postPause = replicate 10 '\b' ++ marginCode 80
 
 main = 
