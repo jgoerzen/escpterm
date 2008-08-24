@@ -20,37 +20,20 @@ module Main where
 
 import qualified Data.ByteString.Char8 as BS
 import System.IO
-import Data.Word
 
-printDelay = 250
-moveDelay = 1250
-
+delay = 250
 flushBuf = "\ESCJ\0"
 reset = "\ESC@"
-unidir = "\ESCU\x01"            -- unidirectional printing
+unidir = "\ESCU\x01"
 
-initCode = reset ++ unidir ++ marginCode 80
-
-{- Used to do this to roll paper.  Now we'll try to move horizontally.
 postBuf = "\ESCJ\x46" -- forward roll x/216 in (108/216 in)
 preBuf = "\ESCj\x46"  -- reverse roll
-
--}
-
-prePause = marginCode 90 ++ replicate 10 ' ' ++ flushBuf
-postPause = replicate 10 '\b' ++ flushBuf ++ marginCode 80
 
 main = 
     do hSetBuffering stdin NoBuffering
        hSetBuffering stdout (BlockBuffering Nothing)
-       BS.hPut stdout (BS.pack initCode)
+       BS.hPut stdout (BS.pack (reset ++ unidir))
        masterReadLoop ""
-
--- Code to set the right margin to n chargs
--- from the left; n ranges from 1 to 255
-marginCode :: Word8 -> String
-marginCode chars =
-    "\ESCQ" ++ [toEnum . fromIntegral $ chars]
 
 masterReadLoop :: String -> IO ()
 masterReadLoop writeBefore =
@@ -62,25 +45,14 @@ masterReadLoop writeBefore =
 
 delayLoop :: IO ()
 delayLoop =
-    do -- wait for a short time for input to become available.
-       hasInput <- hWaitForInput stdin printDelay
+    do hasInput <- hWaitForInput stdin delay
        if hasInput
-          then -- If available, then we read it, send it off, and start again
-               do content <- BS.hGetNonBlocking stdin 4096
+          then do content <- BS.hGetNonBlocking stdin 4096
                   if BS.null content
                      then return ()
                      else do BS.hPut stdout content
                              hFlush stdout
                              delayLoop
-          else -- Otherwise, start a pause.  Flush buffer.
-               do BS.hPut stdout (BS.pack flushBuf)
+          else do BS.hPut stdout (BS.pack flushBuf)
                   hFlush stdout
-                  -- Wait a longer time, and move printhead out of way if
-                  -- there's a longer pause.  If we get input in this time,
-                  -- recurse to process it.
-                  hasInput <- hWaitForInput stdin moveDelay
-                  if hasInput
-                     then delayLoop
-                     else do BS.hPut stdout (BS.pack prePause)
-                             hFlush stdout
-                             masterReadLoop postPause
+                  masterReadLoop ""
