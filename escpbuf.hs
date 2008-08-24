@@ -29,10 +29,13 @@ flushBuf = "\ESCJ\0"
 reset = "\ESC@"
 unidir = "\ESCU\x01"            -- unidirectional printing
 
-initCode = reset ++ unidir ++ marginCode 80
+initCode = reset ++ unidir ++ slowSpeed ++ marginCode 80
 
 prePause = "\ESCJ\x46" -- forward roll x/216 in (108/216 in)
 postPause = "\ESCj\x46"  -- reverse roll
+
+slowSpeed = "\ESCs\x01"
+normalSpeed = "\ESCs\x00"
 
 {- Used to try this to move horizontally -- didn't work
 prePause = marginCode 90 ++ replicate 10 ' ' ++ flushBuf
