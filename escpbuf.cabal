@@ -16,3 +16,6 @@ Executable: escpbuf
 Main-Is: escpbuf.hs
 GHC-Options: -O2
 
+Executable: escpbufsimple
+Main-Is: escpbufsimple.hs
+GHC-Options: -O2

@@ -22,37 +22,34 @@ import qualified Data.ByteString.Char8 as BS
 import System.IO
 
 delay = 250
-flushBuf = "\ESCJ\0"
 reset = "\ESC@"
 unidir = "\ESCU\x01"
-
-postBuf = "\ESCJ\x46" -- forward roll x/216 in (108/216 in)
-preBuf = "\ESCj\x46"  -- reverse roll
+immediate = "\ESCi1"
 
 main = 
     do hSetBuffering stdin NoBuffering
        hSetBuffering stdout (BlockBuffering Nothing)
-       BS.hPut stdout (BS.pack (reset ++ unidir))
-       masterReadLoop ""
+       BS.hPut stdout (BS.pack (reset ++ immediate))
+       masterReadLoop
 
-masterReadLoop :: String -> IO ()
-masterReadLoop writeBefore =
+{- In this loop, read only 1 byte in blocking mode to ensure that we
+never block waiting for more data.  Write it out. -}
+masterReadLoop :: IO ()
+masterReadLoop =
     do content <- BS.hGet stdin 1
-       BS.hPut stdout (BS.pack writeBefore)
        BS.hPut stdout content
        hFlush stdout
-       delayLoop
+       innerLoop
+       masterReadLoop
 
-delayLoop :: IO ()
-delayLoop =
-    do hasInput <- hWaitForInput stdin delay
-       if hasInput
-          then do content <- BS.hGetNonBlocking stdin 4096
-                  if BS.null content
-                     then return ()
-                     else do BS.hPut stdout content
-                             hFlush stdout
-                             delayLoop
-          else do BS.hPut stdout (BS.pack flushBuf)
+{- In this loop, we read up to 4k in non-blocking mode.  Keep doing so while
+we keep getting data.  The moment there is no data waiting, back to other
+loop. -}
+innerLoop :: IO ()
+innerLoop = 
+    do content <- BS.hGetNonBlocking stdin 4096
+       if BS.null content
+          then return ()
+          else do BS.hPut stdout content
                   hFlush stdout
-                  masterReadLoop ""
+                  innerLoop
