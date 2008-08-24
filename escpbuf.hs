@@ -27,7 +27,7 @@ moveDelay = 1250
 
 flushBuf = "\ESCJ\0"
 reset = "\ESC@"
-unidir = "\ESCU\x01"
+unidir = "\ESCU\x01"            -- unidirectional printing
 
 initCode = reset ++ unidir ++ marginCode 80
 
