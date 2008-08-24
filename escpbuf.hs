@@ -20,20 +20,35 @@ module Main where
 
 import qualified Data.ByteString.Char8 as BS
 import System.IO
+import Data.Word
 
 delay = 250
 flushBuf = "\ESCJ\0"
 reset = "\ESC@"
 unidir = "\ESCU\x01"
 
+initCode = reset ++ unidir ++ marginCode 80
+
+{- Used to do this to roll paper.  Now we'll try to move horizontally.
 postBuf = "\ESCJ\x46" -- forward roll x/216 in (108/216 in)
 preBuf = "\ESCj\x46"  -- reverse roll
+
+-}
+
+prePause = marginCode 90 ++ replicate 10 ' '
+postPause = replicate 10 '\b' ++ marginCode 80
 
 main = 
     do hSetBuffering stdin NoBuffering
        hSetBuffering stdout (BlockBuffering Nothing)
-       BS.hPut stdout (BS.pack (reset ++ unidir))
+       BS.hPut stdout (BS.pack initCode)
        masterReadLoop ""
+
+-- Code to set the right margin to n chargs
+-- from the left; n ranges from 1 to 255
+marginCode :: Word8 -> String
+marginCode chars =
+    "\ESCQ" ++ [toEnum . fromIntegral $ chars]
 
 masterReadLoop :: String -> IO ()
 masterReadLoop writeBefore =
@@ -53,6 +68,6 @@ delayLoop =
                      else do BS.hPut stdout content
                              hFlush stdout
                              delayLoop
-          else do BS.hPut stdout (BS.pack flushBuf)
+          else do BS.hPut stdout (BS.pack prePause)
                   hFlush stdout
-                  masterReadLoop ""
+                  masterReadLoop postPause
