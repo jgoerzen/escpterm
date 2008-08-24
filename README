@@ -1,0 +1,4 @@
+How to use:
+
+PAGER=more TERM=escpterm telnet localhost | escpbuf > /dev/lp0
+
